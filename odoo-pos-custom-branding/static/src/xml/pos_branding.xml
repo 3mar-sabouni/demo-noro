@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Saver screen (sleep mode/screensaver): replace Odoo logo with POS brand logo when available -->
+    <t t-inherit="point_of_sale.SaverScreen" t-inherit-mode="extension">
+        <xpath expr="//img[@src='/web/static/img/odoo_logo.svg']" position="replace">
+            <img t-if="brandLogo"
+                 t-att-src="brandLogo"
+                 t-att-height="env.isSmall ? 40 : 182"
+                 alt="Logo"/>
+        </xpath>
+    </t>
+
+    <!-- POS navbar: use POS brand logo instead of default Odoo logo -->
+    <t t-inherit="point_of_sale.Navbar" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('pos-centerheader')]//img[@src='/web/static/img/logo.png']" position="replace">
+            <img t-if="brandLogo"
+                 class="pos-logo pos-logo mw-100"
+                 height="42"
+                 t-on-click="() => debug.toggleWidget()"
+                 t-att-src="brandLogo"
+                 alt="Logo"/>
+        </xpath>
+    </t>
+
+</templates>
+
