@@ -1,0 +1,37 @@
+<odoo>
+    <record id="view_payment_transaction_log_form" model="ir.ui.view">
+        <field name="name">payment.transaction.log.form</field>
+        <field name="model">payment.transaction.log</field>
+        <field name="arch" type="xml">
+            <form create='0'>
+                <sheet>
+                    <group>
+                        <field name="transaction_id" readonly="1"/>
+                        <field name="create_date" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Details">
+                            <field name="html_details" nolabel="1"/>
+                        </page>
+                        <page string="Raw Response">
+                            <field name="raw_response" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree view for log records -->
+    <record id="view_payment_transaction_log_tree" model="ir.ui.view">
+        <field name="name">payment.transaction.log.tree</field>
+        <field name="model">payment.transaction.log</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="create_date" string="Date"/>
+                <field name="transaction_id" string="Transaction"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

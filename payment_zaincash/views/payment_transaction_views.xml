@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_transaction_zain_cash_form_inherit" model="ir.ui.view">
+        <field name="name">payment.transaction.zain_cash.form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reference']" position="after">
+                <field name="zain_cash_transaction_id" invisible="provider_code != 'zain_cash'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

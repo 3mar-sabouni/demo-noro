@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate='1'>
+        <record id="payment_provider_qicard" model="payment.provider">
+            <field name="name">QiCard</field>
+            <field name="code">qicard</field>
+            <field name="state">test</field>
+            <field name="qicard_terminal_id">237984</field>
+            <field name="available_currency_ids" eval="[(4, ref('base.IQD'))]"/> 
+            <field name="qicard_username">paymentgatewaytest</field>
+            <field name="qicard_password">WHaNFE5C3qlChqNbAzH4</field>
+            <field name="qicard_test_url">https://uat-sandbox-3ds-api.qi.iq/api/v1</field>
+            <field name="qicard_production_url">https://uat-sandbox-3ds-api.qi.iq/api/v1</field>
+            <field name="image_128" type="base64" file="payment_qicard/static/description/qicard.png"/>
+            <field name="redirect_form_view_id" ref="redirect_form"/>
+        </record>
+    </data>
+</odoo>

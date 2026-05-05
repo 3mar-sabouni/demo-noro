@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_provider_zain_cash_form" model="ir.ui.view">
+        <field name="name">payment.provider.zain_cash.form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <group name="provider_credentials" position='inside'>
+                <field name="is_manager" invisible="True"/>
+                <group invisible="code != 'zain_cash' or is_manager == False">
+                    <field name="zain_cash_msisdn" string="Wallet Phone Number" placeholder="9647XXXXXXXXX" help="Your registered Zain Cash wallet phone number"/>
+
+                    <field name="zain_cash_merchant_id" string="Merchant ID" placeholder="Merchant ID from Zain Cash" help="Merchant ID obtained from Zain Cash"/>
+
+                    <field name="zain_cash_secret" string="Merchant Secret" password="True"  placeholder="Merchant Secret for JWT" help="Secret key for JWT token generation"/>
+                    <field name="zain_cash_test_url" groups="base.group_user"/>
+                    <field name="zain_cash_production_url" groups="base.group_user"/>
+                </group>
+                <!-- <group>
+                    <div>
+                        <p>
+                            <strong>Note:</strong> To obtain credentials:</p>
+                        <ul>
+                            <li>For testing: Use provided test credentials</li>
+                            <li>For live: Email bd@zaincash.iq with "LIVE CREDENTIALS REQUEST"</li>
+                        </ul>
+                    </div>
+                </group> -->
+            </group>
+
+        </field>
+    </record>
+</odoo>

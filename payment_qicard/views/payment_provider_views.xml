@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_provider_qicard_form" model="ir.ui.view">
+        <field name="name">payment.provider.qicard.form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_generate_qicard_keys" string="Generate RSA Keys" type="object" class="btn-primary" invisible="code != 'qicard' or is_manager == False" confirm="Are you sure you want to generate or update the auth keys?"/>
+                    <button name="action_test_qicard_config" string="Test Configuration" type="object" class="btn-secondary" invisible="code != 'qicard' or is_manager == False"/>
+                </header>
+            </xpath>
+            <group name="provider_credentials" position='inside'>
+                <field name="is_manager" invisible="True"/>
+                <group invisible="code != 'qicard' or is_manager == False">
+                    <field name="qicard_terminal_id" groups="base.group_user"/>
+                    <field name="qicard_username" groups="base.group_user"/>
+                    <field name="qicard_password" password="True" groups="base.group_user"/>
+                    <field name="qicard_pg_public_key_pem" groups="base.group_user"/>
+                    <field name="qicard_my_public_key_pem" groups="base.group_user"/>
+                    <field name="qicard_test_url" groups="base.group_user"/>
+                    <field name="qicard_production_url" groups="base.group_user"/>
+                </group>
+            </group>
+
+        </field>
+    </record>
+</odoo>

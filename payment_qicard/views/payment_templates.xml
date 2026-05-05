@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main redirect form template -->
+    <template id="redirect_form">
+        <form t-att-action="api_url" method="get">
+            <input type="hidden" name="requestId" t-att-value="qicard_request_id"/>
+            <input type="hidden" name="paymentId" t-att-value="qicard_payment_id"/>
+            <input type="hidden" name="amount" t-att-value="amount"/>
+            <input type="hidden" name="currency" t-att-value="currency"/>
+            <input type="hidden" name="reference" t-att-value="reference"/>
+            <input type="hidden" name="fullName" t-att-value="partner.display_name"/>
+            <input type="hidden" name="email" t-att-value="partner.email or ''"/>
+            <input type="hidden" name="phone" t-att-value="partner.phone or ''"/>
+            <input type="hidden" name="address" t-att-value="partner.street or ''"/>
+            <input type="hidden" name="city" t-att-value="partner.city or ''"/>
+            <input type="hidden" name="countryCode" t-att-value="partner.country_id.code or 'IQ'"/>
+        </form>
+    </template>
+</odoo>

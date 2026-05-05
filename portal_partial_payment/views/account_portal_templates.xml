@@ -1,0 +1,50 @@
+<odoo>
+    <template id="portal_invoice_payment_partial" inherit_id="account_payment.portal_invoice_payment" name="Invoice Payment with Partial Option">
+        <xpath expr="//div[@class='modal-body']//div[@t-if='company_mismatch']" position="before">
+            <div class="mb-4 payment-amount-section" t-if="not company_mismatch and (payment_methods_sudo or tokens_sudo) and invoice.partner_id.allow_partial_payment">
+                <!-- Payment Amount Header -->
+                <label class="form-label fw-bold" for="partial_amount">
+                    <i class="fa fa-money-bill me-2 text-primary"></i>Payment Amount
+                </label>
+
+                <!-- Payment Input Group -->
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-light">
+                        <t t-esc="invoice.currency_id.symbol"/>
+                    </span>
+                    <input type="number" class="form-control border-end-0" id="partial_amount" t-att-value="invoice.amount_residual" min="0.01" t-att-max="invoice.amount_residual" step="0.01" required="required" aria-describedby="amount-help"/>
+                    <button class="btn btn-primary" type="button" onclick="setFullAmount()">
+                        <i class="fa fa-check-circle me-1"></i>Full Amount
+                    </button>
+                </div>
+
+                <!-- Payment Progress Bar -->
+                <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" t-att-style="'width: 100%'" t-att-aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+
+                <!-- Help Text -->
+                <div class="d-flex justify-content-between text-muted small" id="amount-help">
+                    <span>Min: <span class="fw-bold text-primary">
+                        <t t-esc="invoice.currency_id.symbol"/>
+0.01</span>
+                </span>
+                <span>Max: <span class="fw-bold text-primary">
+                    <t t-esc="invoice.currency_id.symbol"/>
+                    <t t-esc="invoice.amount_residual"/>
+                </span>
+            </span>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="alert alert-info mt-3 p-2 d-flex align-items-center">
+            <i class="fa fa-info-circle me-2"></i>
+            <small>You can pay any amount between the minimum and maximum. The remaining balance will stay on your invoice.</small>
+        </div>
+
+        <input type="hidden" name="invoice_id" t-att-value="invoice.id"/>
+    </div>
+</xpath>
+</template>
+</odoo>

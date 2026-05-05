@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_transaction_log_form_inherit" model="ir.ui.view">
+        <field name="name">payment.transaction.log.form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_void']" position="after">
+                <button type="object" name="action_check_transaction_status" string="Check Status" class="oe_highlight"/>
+            </xpath>
+            <xpath expr="//field[@name='payment_method_id']" position="before">
+                <field name="is_refund_tx" string="Is Refund"/>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Log History">
+                        <field name="log_history_ids">
+                            <list>
+                                <field name="create_date"/>
+                                <field name="status"/>
+                                <button name="action_view_transaction_log_details" type="object" string="View Details" class="oe_highlight" icon="fa-external-link"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

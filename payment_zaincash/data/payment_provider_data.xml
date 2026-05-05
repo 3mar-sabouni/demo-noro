@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate='1'>
+        <record id="payment_provider_zain_cash" model="payment.provider">
+            <field name="name">Zain Cash</field>
+            <field name="code">zain_cash</field>
+            <field name="state">test</field>
+            <field name="available_currency_ids" eval="[(4, ref('base.IQD'))]"/>
+            <field name="zain_cash_msisdn">9647835077893</field>
+            <field name="zain_cash_merchant_id">5ffacf6612b5777c6d44266f</field>
+            <field name="zain_cash_secret">$2y$10$hBbAZo2GfSSvyqAyV2SaqOfYewgYpfR1O19gIh4SqyGWdmySZYPuS</field>
+            <field name="image_128" type="base64" file="payment_zaincash/static/description/zain-cash.png"/>
+            <field name="redirect_form_view_id" ref="redirect_form"/>
+            <field name="zain_cash_test_url">https://test.zaincash.iq</field>
+            <field name="zain_cash_production_url">https://api.zaincash.iq</field>
+            <!-- <field name="allow_tokenization" eval="True"/>
+            <field name="support_manual_capture" eval="True"/> -->
+        </record>
+    </data>
+</odoo>

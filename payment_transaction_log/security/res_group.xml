@@ -1,0 +1,9 @@
+<odoo>
+    <data>
+
+        <record id="group_payment_provider_manager" model="res.groups">
+            <field name="name">Payment Provider Manager</field>
+        </record>
+
+    </data>
+</odoo>

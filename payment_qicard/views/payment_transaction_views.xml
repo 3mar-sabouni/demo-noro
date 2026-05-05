@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_transaction_qicard_form_inherit" model="ir.ui.view">
+        <field name="name">payment.transaction.qicard.form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reference']" position="after">
+                <field name="qicard_request_id" invisible="provider_code != 'qicard'"/>
+                <field name="qicard_payment_id" invisible="provider_code != 'qicard'"/>
+                <field name="qicard_refund_id" invisible="not qicard_refund_id"/>
+            </xpath>
+            <xpath expr="//button[@name='action_void']" position="after">
+                <button type="object" name="action_cancel_transaction" invisible="state not in ['draft', 'pending'] or provider_code != 'qicard'" groups="payment_transaction_log.group_payment_provider_manager" string="Cancel Transaction" class="oe_highlight" confirm="Are you sure you want to cancel the transaction?"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
