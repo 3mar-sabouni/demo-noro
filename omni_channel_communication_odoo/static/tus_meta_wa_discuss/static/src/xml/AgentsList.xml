@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="discuss.AgentListPanel">
+        <ActionPanel title="title">
+            <View t-props="viewProps"/>
+        </ActionPanel>
+    </t>
+
+    <!-- NAME OF PARTNER IN CHATTER WINDOW HEADER -->
+    <t t-name="tus_meta_wa_discuss.ChatWindow.headerContent"
+       t-inherit="mail.ChatWindow.headerContent"
+       t-inherit-mode="extension" owl="1">
+
+        <xpath expr="//div[@t-if='!state.editingName']" position="before">
+            <div t-if="thread.chatPartner"
+                 class="text-truncate fw-bold border border-transparent me-1 my-0"
+                 t-att-title="thread.chatPartner.name"
+                 t-esc="thread.chatPartner.name"
+                 t-att-class="thread ? 'ms-1' : 'ms-3'"/>
+        </xpath>
+
+        <xpath expr="//div[@t-if='!state.editingName']" position="attributes">
+            <attribute name="t-if">!state.editingName and !thread.chatPartner</attribute>
+        </xpath>
+
+    </t>
+
+    <!-- NAME OF PARTNER IN DISCUSS SIDEBAR -->
+    <t t-name="tus_meta_wa_discuss.DiscussSidebarChannel"
+       t-inherit="mail.DiscussSidebarChannel.main"
+       t-inherit-mode="extension">
+        <xpath expr="//t[@t-esc='thread.displayName']" position="before">
+            <t t-if="thread.chatPartner" t-esc="thread.chatPartner.name"/>
+        </xpath>
+        <xpath expr="//t[@t-esc='thread.displayName']" position="attributes">
+            <attribute name="t-if">!thread.chatPartner</attribute>
+        </xpath>
+    </t>
+
+    <!-- NAME OF PARTNER IN DISCUSS HEADER -->
+    <t t-name="tus_meta_wa_discuss.Discuss"
+       t-inherit="mail.Discuss"
+       t-inherit-mode="extension">
+        <xpath expr="//AutoresizeInput[@value='thread.displayName']" position="attributes">
+            <attribute name="value">thread.chatPartner ? thread.chatPartner.name : thread.displayName</attribute>
+        </xpath>
+    </t>
+
+    <!-- ADD WHATSAPP/FACEBOOK/INSTAGRAM CHANNEL TAB + UPDATE PARTNER NAME -->
+    <t t-name="tus_meta_wa_discuss.MessagingMenu.content"
+       t-inherit="mail.MessagingMenu.content"
+       t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o-mail-MessagingMenu-header')]/t[@t-if='!ui.isSmall']" position="inside">
+            <button class="btn btn-link py-2 rounded-0"
+                    t-att-class="store.discuss.activeTab === 'FbChannels' ? 'fw-bold' : 'text-muted'"
+                    type="button"
+                    role="tab"
+                    t-on-click="() => store.discuss.activeTab = 'FbChannels'">Facebook</button>
+            <button class="btn btn-link py-2 rounded-0"
+                    t-att-class="store.discuss.activeTab === 'InstaChannels' ? 'fw-bold' : 'text-muted'"
+                    type="button"
+                    role="tab"
+                    t-on-click="() => store.discuss.activeTab = 'InstaChannels'">Instagram</button>
+        </xpath>
+        <xpath expr="//t[@t-esc='thread.displayName']" position="attributes">
+            <attribute name="t-esc">
+                thread.chatPartner ? thread.chatPartner.name : thread.displayName
+            </attribute>
+        </xpath>
+    </t>
+</templates>

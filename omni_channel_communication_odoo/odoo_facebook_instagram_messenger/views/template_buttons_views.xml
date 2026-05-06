@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="template_buttons_view_form" model="ir.ui.view">
+            <field name="name">template.buttons.name</field>
+            <field name="model">template.buttons</field>
+            <field name="arch" type="xml">
+                <form string="Buttons">
+                    <sheet>
+                        <group>
+                            <field name="button_action" />
+                            <field name="messenger_component_id" invisible="1" />
+                            <field name="button_text" />
+                            <field
+                                name="website_url"
+                                readonly="button_action != 'web_url'"
+                            />
+                            <field
+                                name="phone_number"
+                                readonly="button_action != 'phone_number'"
+                            />
+                            <field
+                                name="payload"
+                                readonly="button_action != 'postback'"
+                            />
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

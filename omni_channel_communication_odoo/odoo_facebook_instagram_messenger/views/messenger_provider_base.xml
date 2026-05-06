@@ -1,0 +1,153 @@
+<odoo>
+    <record model="ir.ui.view" id="provider_form_view">
+        <field name="name">provider.form</field>
+        <field name="model">messenger.provider</field>
+        <field name="arch" type="xml">
+            <form string="Provider">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="payment_state">
+                            <field name="provider"/>
+                            <field name="state" widget="radio"/>
+                            <field name="meta_platform"/>
+                            <field name="company_id" options='{"no_open":True}'/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page
+                                string="Credentials"
+                                name="messenger_provider_credentials"
+                        >
+                            <group name="messenger_provider">
+                                <field name="graph_api_url" invisible="provider != 'graph_api'"/>
+                                <field
+                                        name="graph_api_token"
+                                        invisible="provider != 'graph_api'"
+                                        password="True"
+                                />
+                                <field
+                                        name="username"
+                                        invisible="provider != 'graph_api'"
+                                        readonly="1"
+                                />
+                                <field
+                                        name="account_id"
+                                        invisible="provider != 'graph_api'"
+                                        readonly="1"
+                                />
+                                <field name="instagram_business_account_id" invisible="provider != 'graph_api'"
+                                       readonly="1"/>
+                                <field name="graph_api_authentication" invisible="provider != 'graph_api'"/>
+                                <field
+                                        name="graph_api_authenticated"
+                                        invisible="provider != 'graph_api'"
+                                        readonly="1"
+                                />
+                                <field
+                                        name="user_id"
+                                        invisible="provider != 'graph_api'"
+
+                                />
+                            </group>
+
+                            <h2>
+                                <field
+                                        name="call_back_url"
+                                        invisible="is_token_generated != True"
+                                        readonly="1"
+                                        force_save="1"
+                                />
+                                <field name="is_token_generated" invisible="1"/>
+                            </h2>
+                            <div
+                                    class="row"
+                                    style="float:right;"
+                                    invisible="provider != 'graph_api'"
+                            >
+                                <div class="col-12">
+                                    <button
+                                            name="messenger_reload_with_get_status"
+                                            type="object"
+                                            class="oe_stat_button"
+                                            icon="fa-refresh"
+                                    >
+                                        Reload / Get Status
+                                    </button>
+                                </div>
+                            </div>
+                        </page>
+                        <page string="Operators" name="operators">
+                            <field name="user_ids">
+                                <kanban>
+                                    <field name="id"/>
+                                    <field name="name"/>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_global_click">
+                                                <div class="o_kanban_image">
+                                                    <img t-att-src="kanban_image('res.users', 'avatar_1024', record.id.raw_value)"
+                                                         alt="User"/>
+                                                </div>
+                                                <div class="o_kanban_details">
+                                                    <h4 class="o_kanban_record_title">
+                                                        <field name="name"/>
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="provider_list_view">
+        <field name="name">provider.list</field>
+        <field name="model">messenger.provider</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="messenger_provider_action">
+        <field name="name">Provider</field>
+        <field name="res_model">messenger.provider</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+            id="messenger_menu"
+            name="Messenger"
+            web_icon="omni_channel_communication_odoo,static/odoo_facebook_instagram_messenger/static/description/icon.png"
+    />
+    <menuitem
+            id="message_history"
+            name="History"
+            parent="messenger_menu"
+            sequence="5"
+    />
+    <menuitem
+            id="messenger_configuration"
+            name="Configuration"
+            parent="messenger_menu"
+    />
+    <menuitem
+            id="messenger_provider_menu"
+            name="Provider"
+            parent="messenger_configuration"
+            action="messenger_provider_action"
+            sequence="10"
+    />
+</odoo>

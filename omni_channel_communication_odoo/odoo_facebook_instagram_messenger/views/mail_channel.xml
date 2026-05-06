@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <record id="discuss_channel_view_form_inherit" model="ir.ui.view">
+            <field name="name">discuss.channel.form.view</field>
+            <field name="model">discuss.channel</field>
+            <field name="inherit_id" ref="mail.discuss_channel_view_form"/>
+            <field name="arch" type="xml">
+                <field name="description" position="before">
+                    <field name="im_provider_id" readonly="1"/>
+                    <field name="instagram_channel" invisible="1"/>
+                    <field name="facebook_channel" invisible="1"/>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="messenger_mail_message_view_form_inherit">
+            <field name="name">messenger.mail.message.view.form.inherit</field>
+            <field name="model">mail.message</field>
+            <field name="inherit_id" ref="mail.mail_message_view_form"/>
+            <field name="arch" type="xml">
+                <field name="is_internal" position="after">
+                    <field name="isFbMsgs"/>
+                    <field name="isInstaMsgs"/>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>

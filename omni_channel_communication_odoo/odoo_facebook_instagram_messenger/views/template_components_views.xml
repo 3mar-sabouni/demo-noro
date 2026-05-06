@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="template_components_view_form" model="ir.ui.view">
+            <field name="name">template.components.view.form</field>
+            <field name="model">template.components</field>
+            <field name="arch" type="xml">
+                <form string="Components">
+                    <sheet>
+                        <group>
+                            <field name="type" />
+                            <field
+                                name="media_type"
+                                invisible="type != 'media'"
+                            />
+                            <field
+                                name="attachment_ids"
+                                widget="many2many_binary"
+                                invisible="type != 'media'"
+                            />
+                            <field name="model_id" force_save="1" invisible="1" />
+                            <field
+                                name="button_type"
+                                invisible="type != 'buttons'"
+                            />
+                            <field
+                                name="text"
+                                invisible="type == 'media' and type == 'buttons' or type != 'quick_reply'"
+                            />
+                        </group>
+                        <group>
+                            <field
+                                name="template_button_ids"
+                                invisible="type != 'buttons' or button_type != 'call_to_action'"
+                                widget="one2many"
+                            >
+                                <list string="Template Buttons" editable="bottom">
+                                    <field name="button_action" />
+                                    <field name="button_text" />
+                                    <field
+                                        name="website_url"
+                                        readonly="button_action == 'web_url'"
+                                    />
+                                    <field
+                                        name="phone_number"
+                                        readonly="button_action == 'phone_number'"
+                                    />
+                                    <field
+                                        name="payload"
+                                        readonly="button_action == 'postback'"
+                                    />
+                                </list>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="template_components_view_list" model="ir.ui.view">
+            <field name="name">template.components.view.list</field>
+            <field name="model">template.components</field>
+            <field name="arch" type="xml">
+                <list string="Components">
+                    <field name="type" />
+                    <field name="text" />
+                </list>
+            </field>
+        </record>
+
+    </data>
+</odoo>

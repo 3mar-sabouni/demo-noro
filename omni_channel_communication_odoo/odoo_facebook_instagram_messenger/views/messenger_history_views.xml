@@ -1,0 +1,63 @@
+<odoo>
+    <record model="ir.ui.view" id="messenger_history_form_view">
+        <field name="name">messenger.history.form</field>
+        <field name="model">messenger.history</field>
+        <field name="arch" type="xml">
+            <form string="Messenger History">
+                <header>
+                    <field name="type" widget="statusbar" />
+                </header>
+                <sheet>
+                    <group>
+                        <field name="provider_id" />
+                        <field name="company_id" />
+                        <field name="model" />
+                        <field name="date" />
+                        <field name="author_id" />
+                        <field name="partner_id" />
+                        <field name="account_id" />
+                        <field name="message" />
+                        <field name="message_id" />
+                        <field name="mail_message_id" readonly="1"/>
+                        <field name="attachment_ids" widget="many2many_tags" />
+                        <field name="fail_reason" />
+                        <field name="active" invisible="1" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+     <record model="ir.ui.view" id="messenger_history_list_view">
+        <field name="name">messenger.history.list</field>
+        <field name="model">messenger.history</field>
+        <field name="arch" type="xml">
+            <list default_order="create_date desc">
+                <field name="provider_id" />
+                <field name="date" />
+                <field name="author_id" />
+                <field name="partner_id" />
+                <field name="account_id" />
+                <field name="message" />
+                <field name="attachment_ids" widget="many2many_tags" />
+                <field name="model" />
+                <field name="type" />
+                <field name="active" invisible="1" />
+            </list>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="messenger_history_action">
+        <field name="name">Messenger History</field>
+        <field name="res_model">messenger.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+        id="messenger_history_menu"
+        name="Messenger History"
+        parent="omni_channel_communication_odoo.message_history"
+        action="messenger_history_action"
+        sequence="1"
+    />
+</odoo>

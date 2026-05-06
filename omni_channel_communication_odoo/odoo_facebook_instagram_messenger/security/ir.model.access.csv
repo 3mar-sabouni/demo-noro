@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_messenger_provider,access.messenger.provider,model_messenger_provider,,1,1,1,1
+access_messenger_history,access.messenger.history,model_messenger_history,,1,1,1,1
+access_instagram_history,access.instagram.history,model_instagram_history,,1,1,1,1
+access_messenger_channel_provider_line,access.messenger.channel.provider.line,model_messenger_channel_provider_line,,1,1,1,1
+access_messenger_compose_message,access.messenger.compose.message,model_messenger_compose_message,,1,1,1,1
+access_instagram_compose_message,access.instagram.compose.message,model_instagram_compose_message,,1,1,1,1
+access_messenger_template,access.messenger.template,model_messenger_template,,1,1,1,1
+access_template_components,access.template.components,model_template_components,,1,1,1,1
+access_template_buttons,access.template.buttons,model_template_buttons,,1,1,1,1
+access_template_components,access.template.components,model_template_components,,1,1,1,1

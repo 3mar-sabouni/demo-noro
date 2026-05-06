@@ -1,0 +1,43 @@
+<odoo>
+    <record id="messenger_view_partner_inherit" model="ir.ui.view">
+        <field name="name">res.partner.inherit.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+            <field name="vat" position="after">
+                <label for="instagram_account_id" string="Instagram ID" />
+                <div class="display: flex;">
+                    <field name="instagram_account_id" style="width: 80%" />
+                    <button
+                        type="action"
+                        name="%(omni_channel_communication_odoo.action_instagram_compose_message_wizard)d"
+                        class="btn-sm btn-link mb4 fa fa-instagram"
+                        aria-label="Send Instagram Message"
+                        title="Send Instagram Message"
+                        invisible="instagram_account_id == False"
+                    />
+                </div>
+                <label for="messenger_account_id" string="Messenger ID" />
+                <div class="display: flex;">
+                    <field name="messenger_account_id" style="width: 80%" />
+                    <button
+                        type="action"
+                        name="%(omni_channel_communication_odoo.action_messenger_compose_message_wizard)d"
+                        class="btn-sm btn-link mb4 fa fa-facebook"
+                        aria-label="Send Facebook Message"
+                        title="Send Facebook Message"
+                        invisible="messenger_account_id == False"
+                    />
+                </div>
+            </field>
+            <xpath expr="//page[@name='sales_purchases']" position="after">
+                <page
+                    name="Messenger Channel Provider Line"
+                    string="Messenger Channel Provider Line"
+                >
+                    <field name="messenger_channel_provider_line_ids" />
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
