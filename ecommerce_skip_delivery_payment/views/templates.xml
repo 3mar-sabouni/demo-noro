@@ -24,26 +24,121 @@
             </t>
         </template>
         
-    <template id="checkout_direct_details" name="checkout_direct_details" inherit_id="website_sale.navigation_buttons">
+    <template id="checkout_direct_details"
+            name="checkout_direct_details"
+            inherit_id="website_sale.navigation_buttons">
+
         <xpath expr="//a[@name='website_sale_main_button']" position="replace">
-            <form method="POST" action="/shop/checkout" class="oe_website_sale">
-                <div class="custom-fields" style="margin-bottom: 20px;">
-                    <div class="form-group">
-                        <label for="customer_name">Name:</label>
-                        <input type="text" id="customer_name" name="customer_name" class="form-control" placeholder="Enter your name" required="1"/>
+
+            <form method="POST"
+                action="/shop/checkout"
+                class="oe_website_sale">
+
+                <t t-set="checkout_mode"
+                t-value="request.website.account_on_checkout"/>
+
+                <t t-set="is_public_user"
+                t-value="request.env.user._is_public()"/>
+
+                <div class="custom-fields mb-3">
+
+                    <!-- Name -->
+                    <div class="form-group mb-3">
+
+                        <label for="customer_name">
+                            Name:
+                        </label>
+
+                        <input type="text"
+                            id="customer_name"
+                            name="customer_name"
+                            class="form-control"
+                            placeholder="Enter your name"
+                            required="1"
+                            t-att-value="request.env.user.partner_id.name if not is_public_user else ''"/>
+
                     </div>
-                    <div class="form-group">
-                        <label for="customer_phone">Phone:</label>
-                        <input type="tel" id="customer_phone" name="customer_phone" class="form-control" placeholder="Enter your phone number" required="1"/>
+
+                    <!-- Phone -->
+                    <div class="form-group mb-3">
+
+                        <label for="customer_phone">
+                            Phone:
+                        </label>
+
+                        <input type="tel"
+                            id="customer_phone"
+                            name="customer_phone"
+                            class="form-control"
+                            placeholder="Enter your phone number"
+                            required="1"
+                            t-att-value="request.env.user.partner_id.phone if not is_public_user else ''"/>
+
                     </div>
-                    <div class="form-group">
-                        <label for="customer_address">Address:</label>
-                        <textarea id="customer_address" name="customer_address" class="form-control" placeholder="Enter your address" rows="3" required="1"></textarea>
+
+                    <!-- Address -->
+                    <div class="form-group mb-3">
+
+                        <label for="customer_address">
+                            Address:
+                        </label>
+
+                        <textarea id="customer_address"
+                                name="customer_address"
+                                class="form-control"
+                                placeholder="Enter your address"
+                                rows="3"
+                                required="1"><t t-esc="request.env.user.partner_id.street if not is_public_user else ''"/></textarea>
+
                     </div>
+
                 </div>
-                <button type="submit" name="order_confirm" class=" btn btn-primary  w-100" >Confirm Order</button>
+
+                <!-- Confirm Button -->
+                <button type="submit"
+                        name="order_confirm"
+                        class="btn btn-primary w-100"
+                        t-att-disabled="'disabled' if checkout_mode == 'mandatory' and is_public_user else None">
+
+                    Confirm Order
+
+                </button>
+
+                <!-- Login Required Message -->
+                <t t-if="checkout_mode == 'mandatory' and is_public_user">
+
+                    <div class="alert alert-danger mt-3 text-center">
+
+                        You must sign in or create an account before confirming the order.
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-2">
+
+                        <!-- Sign In -->
+                        <a href="/web/login?redirect=/shop/cart"
+                        class="btn btn-outline-primary w-50">
+
+                            Sign In
+
+                        </a>
+
+                        <!-- Sign Up -->
+                        <a href="/web/signup?redirect=/shop/cart"
+                        class="btn btn-primary w-50">
+
+                            Sign Up
+
+                        </a>
+
+                    </div>
+
+                </t>
+
             </form>
+
         </xpath>
+
     </template>
 
     <template id="remove_step_wizard" inherit_id="website.step_wizard">

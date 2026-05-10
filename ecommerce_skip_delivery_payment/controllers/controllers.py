@@ -16,15 +16,32 @@ class WebsiteSaleSkipAddress(WebsiteSale):
         customer_phone = post.get('customer_phone')
         customer_address = post.get('customer_address')
 
-        if request.env.user and not request.env.user._is_public():
-            # Update existing user's phone and address
+        checkout_mode = request.website.account_on_checkout
+
+        is_public_user = request.env.user._is_public()
+
+        # =========================
+        # Mandatory Login
+        # =========================
+        if checkout_mode == 'mandatory' and is_public_user:
+            return request.redirect('/web/login?redirect=/shop/cart')
+
+        # =========================
+        # Logged In User
+        # =========================
+        if not is_public_user:
             request.env.user.partner_id.write({
                 'phone': customer_phone,
                 'street': customer_address,
             })
+
             partner = request.env.user.partner_id
+
+        # =========================
+        # Guest Checkout Allowed
+        # optional / disabled
+        # =========================
         else:
-            # Create a new partner for guest users
             partner = request.env['res.partner'].sudo().create({
                 'name': customer_name,
                 'phone': customer_phone,
