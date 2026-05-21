@@ -1,332 +1,211 @@
-# -*- coding: utf-8 -*-
-
-import json
-import time
-import re
-
-from markupsafe import Markup
 from odoo import models
-from google import genai
-
+from google import genai 
+from google.genai import types
+import json
+from markupsafe import Markup
+import threading
 
 class Channel(models.Model):
     _inherit = 'discuss.channel'
 
-    # =====================================================
-    # RATE LIMIT
-    # =====================================================
-    _last_request = {}
+    def _get_question_related_to_odoo(self, client, gemini_model, message_body):
+        response_format = {
+            "related_to_odoo": "yes/no",
+            "used_model_for_postgresql_query": "List of models"
+        }
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=f'Give me response in this format {json.dumps(response_format)} for question "{message_body}"',
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        return json.loads(response.text)
 
-    def _rate_limit(self, uid, cooldown=5):
-        now = time.time()
-        last = self._last_request.get(uid)
+    def _generate_query(self, client, gemini_model, message_body, model_fields_mapping):
+        format_query = '{"query" : "postgresql_odoo_query","fields" : {"model_1" : "used_field_list_for_query_model_1","model_2": "used_field_list_for_query_model_2"}}'
+        instruction = [
+            "if field name is name use operator ilike",
+            "if field translate is true search like this : pt.name::text ilike '%abc%'",
+            "if field translate is true and field name is name search like this : name::text ilike '%xyz%'",
+            "Must be give alias for field in generated query",
+            "for field type char and translate is true search like this where name::text ilike '%abc%'",
+            "Not take that type of word in response like [Based on the data, using the data,Based on the provided data]"
+        ]
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=f'My database structure is {model_fields_mapping}. instruction: {instruction}. Give me response in this format {format_query} for question "{message_body}"',
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        return json.loads(response.text)
 
-        if last and (now - last) < cooldown:
+    def _generate_python_code_snippet(self, client, gemini_model, message_body, used_model_for_postgresql_query):
+        model_fields_mapping = dict()
+        for model_name in used_model_for_postgresql_query:
+            model_name = model_name.replace('_', '.')
+            model_id = self.env['ir.model'].search([('model', '=', model_name)], limit=1)
+            if not model_id:
+                continue
+            field_list = [{
+                "name": field.name, 
+                "field_description": field.field_description,
+                "type": field.ttype, 
+                "translate": field.translate
+            } for field in model_id.field_id]
+            model_fields_mapping[model_name] = field_list
+            
+        if not model_fields_mapping:
             return False
+            
+        format_query = "{'python_code_snippet': [python_code_1,python_code_2,python_code_3,python_code_4,python_code_5]}"
+        prompt_content = f'''Key Principle:
+            self Usage: You can freely use self within the code snippets, assuming the context is an Odoo model method.
+            final_result Dictionary: A dictionary named final_result is always available in the environment. Store your final output in final_result['response']. Never overwrite or reassign the final_result dictionary itself. Only modify the final_result['response'] value..
+            Snippet Only: Do not create classes or functions. Generate concise, directly runnable code snippets.
+            ORM Methods: Use Odoo ORM methods exclusively. Do not use direct PostgreSQL queries due to access restrictions.
+            Read-Only Operations: You have no access to create, write, or unlink methods.
+            No sudo(): Do not use sudo() anywhere in the code.
+            Context and User: Always use the following context and user when interacting with the ORM: .with_context(from_gemini=True).with_user(self.env.user). For example: self.env['sale.order'].with_context(from_gemini=True).with_user(self.env.user).search([])
+            Generate 5 distinct script for odoov18.
+            database structure: {model_fields_mapping}.             
+            Give me response in this format {format_query} for question "{message_body}"'''
 
-        self._last_request[uid] = now
-        return True
-
-    # =====================================================
-    # GEMINI CALL
-    # =====================================================
-    def _call_gemini(self, client, model, prompt, retries=3, wait=30):
-
-        for i in range(retries):
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=prompt_content,
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        
+        res = json.loads(response.text)
+        final_result = {'response': ''}
+        result_dict = {}
+        for count, code in enumerate(res.get('python_code_snippet', [])):
             try:
-                return client.models.generate_content(
-                    model=model,
-                    contents=prompt
-                )
+                exec(code, {'self': self, 'final_result': final_result})
+                result_dict[f"response_{count}"] = final_result.get('response')
             except Exception as ex:
-                msg = str(ex).lower()
+                result_dict[f"error_{count}"] = ex
+        return result_dict
 
-                if "429" in msg or "quota" in msg:
-                    if i < retries - 1:
-                        time.sleep(wait)
-                        continue
-
-                raise ex
-
-    # =====================================================
-    # SAFE JSON
-    # =====================================================
-    def _json(self, text):
+    def _clean_and_post_html(self, response_text, user_gemini):
         try:
-            text = re.sub(r"```json|```", "", text.strip())
-            return json.loads(text)
+            res = json.loads(response_text)
+            final_response = res.get('html_code', '')
         except Exception:
-            return {}
+            final_response = response_text
 
-    # =====================================================
-    # POST MESSAGE
-    # =====================================================
-    def _post(self, user, msg):
-        self.with_user(user).message_post(
-            body=Markup(msg),
+        replace_list = [('<html>', ''), ('</html>', ''), ('html', ''), ("```", '')]
+        for i, j in replace_list:
+            final_response = final_response.replace(i, j)
+        final_response = final_response.strip()
+
+        self.with_user(user_gemini).message_post(
+            body=Markup(final_response),
             message_type='comment',
             subtype_xmlid='mail.mt_comment'
         )
 
-    # =====================================================
-    # INTENT ROUTER (CORE BRAIN)
-    # =====================================================
-    def _route_intent(self, client, model, message):
+    def _response_gemini(self, client, gemini_model, message_body, user_gemini):
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=message_body,
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        self._clean_and_post_html(response.text, user_gemini)
 
-        prompt = f"""
-You are an Odoo 18 AI router.
+    def _response_gemini_html(self, client, gemini_model, message_body, user_gemini):
+        response = client.models.generate_content(
+            model=gemini_model,
+            contents=message_body,
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        self._clean_and_post_html(response.text, user_gemini)
 
-Return ONLY JSON:
-
-{{
-  "type": "count | list | report | explain | none",
-  "model": "res.partner | sale.order | account.move | product.product | stock.quant | crm.lead | purchase.order | hr.employee | project.project | helpdesk.ticket | none"
-}}
-
-RULES:
-- customers → res.partner
-- sales orders → sale.order
-- invoices → account.move
-- products → product.product
-- stock → stock.quant
-- crm → crm.lead
-- purchase → purchase.order
-- employees → hr.employee
-- projects → project.project
-- tickets → helpdesk.ticket
-
-QUESTION:
-{message.body}
-"""
-
-        res = self._call_gemini(client, model, prompt)
-        return self._json(res.text)
-
-    # =====================================================
-    # ODOO ORM ENGINE (REAL DATA ONLY)
-    # =====================================================
-    def _execute_odoo(self, intent):
-
-        model = intent.get("model")
-        action = intent.get("type")
-
-        if model == "none":
-            return None
-
-        env = self.env
-
-        # -------------------------
-        # CONTACTS
-        # -------------------------
-        if model == "res.partner":
-            if action == "count":
-                return {
-                    "count": env["res.partner"].search_count([])
-                }
-
-            if action == "list":
-                recs = env["res.partner"].search([], limit=10)
-                return {
-                    "records": recs.read(["name", "email", "create_date"])
-                }
-
-        # -------------------------
-        # SALES
-        # -------------------------
-        if model == "sale.order":
-            if action == "count":
-                return {
-                    "count": env["sale.order"].search_count([])
-                }
-
-            if action == "list":
-                recs = env["sale.order"].search([], limit=10)
-                return {
-                    "records": recs.read(["name", "amount_total", "state"])
-                }
-
-        # -------------------------
-        # INVOICES
-        # -------------------------
-        if model == "account.move":
-            if action == "count":
-                return {
-                    "count": env["account.move"].search_count([
-                        ("move_type", "=", "out_invoice")
-                    ])
-                }
-
-        # -------------------------
-        # PRODUCTS
-        # -------------------------
-        if model == "product.product":
-            if action == "count":
-                return {
-                    "count": env["product.product"].search_count([])
-                }
-
-        # -------------------------
-        # STOCK
-        # -------------------------
-        if model == "stock.quant":
-            if action == "count":
-                return {
-                    "count": env["stock.quant"].search_count([])
-                }
-
-        # -------------------------
-        # CRM
-        # -------------------------
-        if model == "crm.lead":
-            if action == "count":
-                return {
-                    "count": env["crm.lead"].search_count([])
-                }
-
-        # -------------------------
-        # PURCHASE
-        # -------------------------
-        if model == "purchase.order":
-            if action == "count":
-                return {
-                    "count": env["purchase.order"].search_count([])
-                }
-
-        # -------------------------
-        # EMPLOYEES
-        # -------------------------
-        if model == "hr.employee":
-            if action == "count":
-                return {
-                    "count": env["hr.employee"].search_count([])
-                }
-
-        # -------------------------
-        # PROJECTS
-        # -------------------------
-        if model == "project.project":
-            if action == "count":
-                return {
-                    "count": env["project.project"].search_count([])
-                }
-
-        # -------------------------
-        # HELP DESK
-        # -------------------------
-        if model == "helpdesk.ticket":
-            if "helpdesk.ticket" in env:
-                if action == "count":
-                    return {
-                        "count": env["helpdesk.ticket"].search_count([])
-                    }
-
-        return None
-
-    # =====================================================
-    # FINAL RESPONSE GENERATOR
-    # =====================================================
-    def _final_answer(self, client, model, message, data):
-
-        prompt = f"""
-You are an Odoo 18 AI assistant.
-
-RULES:
-- Use ONLY provided Odoo data
-- NEVER guess numbers
-- NEVER mention other systems
-- Be precise and short
-
-QUESTION:
-{message.body}
-
-ODOO DATA:
-{data}
-
-Return ONLY JSON:
-{{
-  "html_code": ""
-}}
-"""
-
-        res = self._call_gemini(client, model, prompt)
-        data = self._json(res.text)
-
-        html = data.get("html_code", "<p>No data</p>")
-
-        return html
-
-    # =====================================================
-    # MAIN HOOK
-    # =====================================================
-    def _notify_thread(self, message, msg_vals=None, **kwargs):
-
-        res = super()._notify_thread(message, msg_vals=msg_vals, **kwargs)
-
+    def _process_gemini_async(self, channel_id, message_body, gemini_model, gemini_api_key, user_gemini_id):
+        """ Runs inside a separate thread with a unique standalone database cursor """
+        new_env = self.env(cr=self.pool.cursor())
         try:
-            partner = self.env.ref(
-                "googel_gemini_odoo_connector.partner_gemini"
-            )
-
-            user = self.env.ref(
-                "googel_gemini_odoo_connector.user_gemini"
-            )
-
-            author_id = msg_vals.get("author_id")
-
-            if author_id == partner.id:
-                return res
-
-            channel = self.env["discuss.channel"].browse(
-                msg_vals.get("res_id")
-            )
-
-            if (
-                channel.channel_type != "chat"
-                or partner.id not in channel.channel_partner_ids.ids
-            ):
-                return res
-
-            if not self._rate_limit(author_id):
-                self._post(user, "Please wait a few seconds...")
-                return res
-
-            config = self.env["ir.config_parameter"].sudo()
-
-            model = config.get_param(
-                "googel_gemini_odoo_connector.gemini_model"
-            )
-
-            api_key = config.get_param(
-                "googel_gemini_odoo_connector.gemini_api_key"
-            )
-
-            if not model or not api_key:
-                self._post(user, "Gemini not configured.")
-                return res
-
-            client = genai.Client(api_key=api_key)
-
-            # STEP 1: INTENT
-            intent = self._route_intent(client, model, message)
-
-            # STEP 2: ODOO DATA
-            odoo_data = self._execute_odoo(intent)
-
-            # STEP 3: FINAL ANSWER
-            html = self._final_answer(
-                client,
-                model,
-                message,
-                odoo_data
-            )
-
-            self._post(user, html)
-
+            client = genai.Client(api_key=gemini_api_key)
+            detached_channel = new_env['discuss.channel'].browse(channel_id)
+            
+            res = detached_channel._get_question_related_to_odoo(client, gemini_model, message_body)
+            
+            body = f'generated a text answer for question : {message_body}\nAlso give a response in html code.\nresponse format : {{"html_code" : html_code_response}}'
+            
+            if res.get('related_to_odoo') == 'yes':
+                used_models = res.get('used_model_for_postgresql_query')
+                if isinstance(used_models, str):
+                    try:
+                        used_models = eval(used_models)
+                    except Exception:
+                        pass
+                
+                odoo_response = detached_channel._generate_python_code_snippet(client, gemini_model, message_body, used_models)
+                if odoo_response:
+                    body += f'\nthis a different response from odoo run script : {odoo_response}, generate a answer from this response. This is a final data you don\'t need to filter out data. Don\'t show a response data in answer.'
+                    detached_channel._response_gemini_html(client, gemini_model, body, user_gemini_id)
+                else:
+                    detached_channel._response_gemini(client, gemini_model, body, user_gemini_id)
+            else:
+                detached_channel._response_gemini(client, gemini_model, body, user_gemini_id)
+                
+            new_env.cr.commit()
+            
         except Exception as ex:
-            msg = str(ex)
-            print("AI ERROR:", msg)
+            error_msg = str(ex)
+            # Rebranded User Notifications
+            friendly_message = f"⚠️ <b>Noro System Automation Notice:</b><br/>"
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                friendly_message += "The engine is currently processing high data volumes. Please allow a minute before resending your command."
+            else:
+                friendly_message += f"Engine tracking trace: {error_msg}"
+                
+            try:
+                detached_channel = new_env['discuss.channel'].browse(channel_id)
+                detached_channel.with_user(user_gemini_id).message_post(
+                    body=Markup(friendly_message),
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+                new_env.cr.commit()
+            except Exception:
+                new_env.cr.rollback()
+        finally:
+            new_env.cr.close()
 
-            if "429" in msg or "quota" in msg:
-                self._post(user, "Gemini quota exceeded. Try later.")
+    def _notify_thread(self, message, msg_vals=None, **kwargs):
+        rdata = super(Channel, self)._notify_thread(message, msg_vals=msg_vals, **kwargs)
+        if not msg_vals:
+            return rdata
 
-        return res
+        partner_gemini = self.env.ref("googel_gemini_odoo_connector.partner_gemini", raise_if_not_found=False)
+        user_gemini = self.env.ref("googel_gemini_odoo_connector.user_gemini", raise_if_not_found=False)
+        
+        if not partner_gemini or not user_gemini:
+            return rdata
+
+        author_id = msg_vals.get('author_id')
+        discuss_channel_id = self.env['discuss.channel'].browse(msg_vals.get('res_id', 0))
+        partner_ids = discuss_channel_id.channel_partner_ids
+
+        if (author_id != partner_gemini.id) and (msg_vals.get('model', '') == 'discuss.channel' and partner_gemini.id in partner_ids.ids):
+            if discuss_channel_id.channel_type != 'chat':
+                return rdata
+                
+            gemini_model = self.env['ir.config_parameter'].sudo().get_param('googel_gemini_odoo_connector.gemini_model')
+            gemini_api_key = self.env['ir.config_parameter'].sudo().get_param('googel_gemini_odoo_connector.gemini_api_key')
+            
+            if not gemini_model or not gemini_api_key:
+                self.with_user(user_gemini.id).message_post(
+                    body=Markup("Noro System connection parameters are unconfigured. Please check system parameters."),
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+                return rdata
+
+            # Thread execution block for instant handling
+            threading.Thread(
+                target=self._process_gemini_async,
+                args=(discuss_channel_id.id, message.body, gemini_model, gemini_api_key, user_gemini.id),
+                daemon=True
+            ).start()
+
+        return rdata
