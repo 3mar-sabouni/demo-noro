@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="oh_quick_search.SearchShortcut">
+        <button class="o-dropdown--narrow o-dropdown dropdown-toggle dropdown" title="Tap to Search" t-on-click="onClickSearch">
+            <i class="fa fa-search"/>
+        </button>
+    </t>
+</templates>
