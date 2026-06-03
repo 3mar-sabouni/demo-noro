@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Portal Partial Payment',
-    'version': '1.0',
+    'version': '18.0',
     'summary': 'Add the functionality to pay partially on the website',
     'description': "Add the functionality to pay partially on the website",
     'author': "Uruk",

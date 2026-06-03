@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Payment Provider: QiCard',
-    'version': '1.0',
+    'version': '18.0',
     'category': 'Payment',
     'summary': 'QiCard Payment Gateway Integration for Odoo',
     'sequence': 1,

@@ -1,6 +1,7 @@
 {
     'name': 'Shiprocket: Cash on Delivery',
     'category': 'Inventory/Delivery',
+    'version': '18.0.0.4',
     'summary': 'Provide cash on delivery for website users',
     'description': """
 This module allows ecommerce users to book an order with the shiprocket using cash on delivery feature.

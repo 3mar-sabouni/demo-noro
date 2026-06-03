@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Payment Provider: Zain Cash',
-    'version': '1.0',
+    'version': '18.0',
     'category': 'Accounting',
     'summary': 'Integration with Zain Cash Payment Gateway',
         'description': """
