@@ -489,7 +489,3 @@ def unlink_new(self):
     _unlink.info('User #%s deleted %s records with IDs: %r', self._uid, self._name, self.ids)
 
     return True
-
-BaseModel.create = create_new
-BaseModel.write = write_new
-BaseModel.unlink = unlink_new
